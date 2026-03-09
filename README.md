@@ -51,11 +51,11 @@ Tests reuse the existing dev server on port 3000.
 ## Deployment
 
 - **GitHub only** — Good for backing up code and sharing. It does **not** run the app; you need a host to have a live site.
-- **Vercel** — Runs the UI, editor, timeline, and motion clips, but **does not run generation or export** (no Python runtime). Calls to "Generate clip" and "Regenerate frame" will return a 503 explaining that you should run locally for full functionality.
+- **Vercel** — The Google Image Search scraper runs in Node (fetch + regex), so **Generate clip** and **Regenerate frame** work on Vercel. Export video and stitched preview still require Python and are disabled there.
 - **Supabase** — Not used. The app has no database or Supabase integration. You only need Supabase if you add auth, DB, or storage later.
 - **With export** — Use a host that runs Node + Python + ffmpeg (e.g. VPS, Railway, Render), or run Export video locally.
 
-**TL;DR:** Push to GitHub, connect to [Vercel](https://vercel.com) for a live demo of the editor UI. For generating clips and exporting video, run locally with Python installed.
+**TL;DR:** Push to GitHub, connect to [Vercel](https://vercel.com). For **reliable image search in prod**, add **`SERPAPI_KEY`** in Vercel (free tier at [serpapi.com](https://serpapi.com)). Without it, the app falls back to a direct Google scrape, which can be blocked on Vercel. Export video only works locally with Python.
 
 ## Tech
 

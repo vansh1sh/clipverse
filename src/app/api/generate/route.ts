@@ -6,8 +6,7 @@ import {
 
 /**
  * Generate clip from prompt.
- * Uses the local Google Image Search scraper (Python) and therefore
- * only works in environments where Python is installed.
+ * Uses Google Image Search (Node scraper on Vercel, Python optional locally).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -20,19 +19,6 @@ export async function POST(request: NextRequest) {
     }
 
     const cleanPrompt = prompt.trim();
-    const isVercel = process.env.VERCEL === "1";
-
-    // On Vercel (no Python runtime), generation is disabled.
-    if (isVercel) {
-      return NextResponse.json(
-        {
-          error:
-            "Prompt-to-clip generation is only available when running locally (requires Python for Google Image Search).",
-        },
-        { status: 503 }
-      );
-    }
-
     const initialFrames = await fetchGoogleImagesAsDataUrls(
       cleanPrompt,
       DEFAULT_FRAME_COUNT

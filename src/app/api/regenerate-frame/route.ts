@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchOneGoogleImageAsDataUrl } from "@/lib/google-images";
 
 /**
- * Regenerate a single frame using the local Google Image Search scraper.
- * Requires Python, so this is disabled on Vercel.
+ * Regenerate a single frame using Google Image Search (Node on Vercel, Python optional locally).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -13,18 +12,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Prompt is required" },
         { status: 400 }
-      );
-    }
-
-    const isVercel = process.env.VERCEL === "1";
-
-    if (isVercel) {
-      return NextResponse.json(
-        {
-          error:
-            "Regenerate frame is only available when running locally (requires Python for Google Image Search).",
-        },
-        { status: 503 }
       );
     }
 
