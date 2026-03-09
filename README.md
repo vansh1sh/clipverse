@@ -8,7 +8,10 @@ Instead of generating a single video output from a script or prompt, ClipVerse a
 
 ## 🎥 Demo
 
-**Live app:** [clipverse-six.vercel.app](https://clipverse-six.vercel.app)
+![ClipVerse – branching timeline and multiverse editor](docs/clipverse-demo.png)
+
+- **Live app:** [clipverse-six.vercel.app](https://clipverse-six.vercel.app)
+- **Demo video:** [Google Drive](https://drive.google.com/drive/folders/1bivC7Y_GHxBCMva_BgxfbYmo1plCU7BS?usp=drive_link)
 
 ---
 
