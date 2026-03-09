@@ -19,15 +19,9 @@ Create 30-second video clips from a text prompt and edit them frame-by-frame.
    npm install
    ```
 
-2. **Image source**: With **Pexels** (recommended for deployment): set `PEXELS_API_KEY` and clip generation + frame regeneration use Pexels (no Python). Without it: install Python 3 and `pip install -r scripts/requirements.txt`; the app uses `scripts/google_image_scraper.py` for Google Image Search.
+2. **Image source**: Install Python 3 and `pip install -r scripts/requirements.txt` (at least `requests`). The app uses `scripts/google_image_scraper.py` for Google Image Search to fetch clip and frame images.
 
-3. Optional — **Search by keyword** (Pexels): same [Pexels](https://www.pexels.com/api/) API key enables keyword search in the editor.
-   ```bash
-   cp .env.example .env
-   # PEXELS_API_KEY=your_pexels_key
-   ```
-
-4. **Export video** (optional): Requires Python 3 and MoviePy. The "Export video" button in the editor stitches the current frame sequence (with your edits and trim range) into an MP4 via `scripts/stitch_video.py`.
+3. **Export video** (optional): Requires Python 3 and MoviePy. The "Export video" button in the editor stitches the current frame sequence (with your edits and trim range) into an MP4 via `scripts/stitch_video.py`.
 
 5. Run the app:
    ```bash
@@ -57,15 +51,15 @@ Tests reuse the existing dev server on port 3000.
 ## Deployment
 
 - **GitHub only** — Good for backing up code and sharing. It does **not** run the app; you need a host to have a live site.
-- **Vercel** — If you don't need video export, everything else works on Vercel. Set **`PEXELS_API_KEY`** in the Vercel project env so "Generate clip" and "Regenerate frame" use Pexels (no Python). Optional: **`PIXABAY_API_KEY`** for motion clips. Video export and stitched preview still don't run on Vercel.
+- **Vercel** — Runs the UI, editor, timeline, and motion clips, but **does not run generation or export** (no Python runtime). Calls to "Generate clip" and "Regenerate frame" will return a 503 explaining that you should run locally for full functionality.
 - **Supabase** — Not used. The app has no database or Supabase integration. You only need Supabase if you add auth, DB, or storage later.
 - **With export** — Use a host that runs Node + Python + ffmpeg (e.g. VPS, Railway, Render), or run Export video locally.
 
-**TL;DR:** Add `PEXELS_API_KEY` (and optionally `PIXABAY_API_KEY`), push to GitHub, connect to [Vercel](https://vercel.com). Generate, edit, timeline, and search work; only export/preview video do not run.
+**TL;DR:** Push to GitHub, connect to [Vercel](https://vercel.com) for a live demo of the editor UI. For generating clips and exporting video, run locally with Python installed.
 
 ## Tech
 
 - Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS
 - Google Image Search (scraping via `scripts/google_image_scraper.py`) for clip and frame images; no Replicate or Pollinations
 - Client-side frame display, drag-and-drop reorder, trim range, frame export
-- Python (MoviePy) for stitching frames into MP4; Pexels for optional keyword image search
+- Python (MoviePy) for stitching frames into MP4

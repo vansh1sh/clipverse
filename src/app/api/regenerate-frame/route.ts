@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchOneGoogleImageAsDataUrl } from "@/lib/google-images";
-import { fetchOnePexelsImageAsDataUrl } from "@/lib/pexels-images";
 
 /**
- * Regenerate a single frame. Uses Pexels when PEXELS_API_KEY is set (Vercel-safe);
- * otherwise uses Google Image Search (Python scraper).
+ * Regenerate a single frame using the local Google Image Search scraper.
+ * Requires Python, so this is disabled on Vercel.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -17,22 +16,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pexelsKey = process.env.PEXELS_API_KEY;
     const isVercel = process.env.VERCEL === "1";
 
-    if (isVercel && !pexelsKey) {
+    if (isVercel) {
       return NextResponse.json(
         {
           error:
-            "Regenerate frame on this host requires PEXELS_API_KEY. Add it in Vercel → Settings → Environment Variables.",
+            "Regenerate frame is only available when running locally (requires Python for Google Image Search).",
         },
         { status: 503 }
       );
     }
 
-    const imageDataUrl = pexelsKey
-      ? await fetchOnePexelsImageAsDataUrl(searchQuery, pexelsKey)
-      : await fetchOneGoogleImageAsDataUrl(searchQuery);
+    const imageDataUrl = await fetchOneGoogleImageAsDataUrl(searchQuery);
 
     if (!imageDataUrl) {
       return NextResponse.json(

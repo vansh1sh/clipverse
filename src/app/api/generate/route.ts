@@ -3,11 +3,11 @@ import {
   fetchGoogleImagesAsDataUrls,
   DEFAULT_FRAME_COUNT,
 } from "@/lib/google-images";
-import { fetchPexelsImagesAsDataUrls } from "@/lib/pexels-images";
 
 /**
- * Generate clip from prompt. Uses Pexels when PEXELS_API_KEY is set (Vercel-safe);
- * otherwise uses Google Image Search (Python scraper, requires local/VPS).
+ * Generate clip from prompt.
+ * Uses the local Google Image Search scraper (Python) and therefore
+ * only works in environments where Python is installed.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -20,37 +20,23 @@ export async function POST(request: NextRequest) {
     }
 
     const cleanPrompt = prompt.trim();
-    const pexelsKey = process.env.PEXELS_API_KEY;
     const isVercel = process.env.VERCEL === "1";
 
-    // On Vercel (no Python), require Pexels to avoid spawn python3 ENOENT
-    if (isVercel && !pexelsKey) {
+    // On Vercel (no Python runtime), generation is disabled.
+    if (isVercel) {
       return NextResponse.json(
         {
           error:
-            "Image generation on this host requires PEXELS_API_KEY. Add it in Vercel → Settings → Environment Variables (get a key at pexels.com/api).",
+            "Prompt-to-clip generation is only available when running locally (requires Python for Google Image Search).",
         },
         { status: 503 }
       );
     }
 
-    let initialFrames: string[];
-    let source: string;
-
-    if (pexelsKey) {
-      initialFrames = await fetchPexelsImagesAsDataUrls(
-        cleanPrompt,
-        DEFAULT_FRAME_COUNT,
-        pexelsKey
-      );
-      source = "pexels";
-    } else {
-      initialFrames = await fetchGoogleImagesAsDataUrls(
-        cleanPrompt,
-        DEFAULT_FRAME_COUNT
-      );
-      source = "google-images";
-    }
+    const initialFrames = await fetchGoogleImagesAsDataUrls(
+      cleanPrompt,
+      DEFAULT_FRAME_COUNT
+    );
 
     if (initialFrames.length === 0) {
       return NextResponse.json(
@@ -64,7 +50,7 @@ export async function POST(request: NextRequest) {
       duration: initialFrames.length * 2,
       prompt: cleanPrompt,
       initialFrames,
-      source,
+      source: "google-images",
     });
   } catch (err) {
     console.error("Generate error:", err);

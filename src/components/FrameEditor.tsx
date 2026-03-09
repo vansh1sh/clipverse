@@ -612,47 +612,8 @@ export default function FrameEditor({
   };
 
   const searchImages = async () => {
-    if (!searchKeyword.trim()) return;
-    setSearchLoading(true);
-    setSearchError(null);
+    setSearchError("Keyword image search has been disabled.");
     setSearchResults([]);
-    try {
-      const res = await fetch(`/api/search-images?q=${encodeURIComponent(searchKeyword.trim())}`);
-      const text = await res.text();
-      const contentType = res.headers.get("content-type") ?? "";
-      let data: unknown;
-      try {
-        data = text ? JSON.parse(text) : null;
-      } catch {
-        const hint =
-          "If PEXELS_API_KEY is in .env, restart the dev server (stop, then run npm run dev again). Get a key at pexels.com/api if needed.";
-        console.error(
-          "[search-images] Non-JSON response:",
-          res.status,
-          contentType,
-          text.slice(0, 200)
-        );
-        setSearchError(
-          contentType.includes("application/json")
-            ? `Search response invalid. ${hint}`
-            : `Search got an unexpected response (not JSON). ${hint} Check the terminal running the dev server for errors. Open DevTools → Console to see the response.`
-        );
-        return;
-      }
-      if (!res.ok) {
-        const msg =
-          typeof data === "object" && data !== null && "error" in data && typeof (data as { error: string }).error === "string"
-            ? (data as { error: string }).error
-            : "Search failed";
-        setSearchError(msg);
-        return;
-      }
-      setSearchResults(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setSearchError(err instanceof Error ? err.message : "Search failed");
-    } finally {
-      setSearchLoading(false);
-    }
   };
 
   const handleReplaceWithImage = (e: React.ChangeEvent<HTMLInputElement>) => {
