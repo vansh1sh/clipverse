@@ -6,6 +6,16 @@ import os from "os";
 import { searchPixabayVideos } from "@/lib/pixabay-videos";
 
 export async function POST(request: NextRequest) {
+  if (process.env.VERCEL === "1") {
+    return NextResponse.json(
+      {
+        error:
+          "Video export is not available on this host (requires Python + MoviePy). Export locally or use a server with Python installed.",
+      },
+      { status: 503 }
+    );
+  }
+
   let tmpDir: string | null = null;
   try {
     const body = await request.json();

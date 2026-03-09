@@ -21,6 +21,19 @@ export async function POST(request: NextRequest) {
 
     const cleanPrompt = prompt.trim();
     const pexelsKey = process.env.PEXELS_API_KEY;
+    const isVercel = process.env.VERCEL === "1";
+
+    // On Vercel (no Python), require Pexels to avoid spawn python3 ENOENT
+    if (isVercel && !pexelsKey) {
+      return NextResponse.json(
+        {
+          error:
+            "Image generation on this host requires PEXELS_API_KEY. Add it in Vercel → Settings → Environment Variables (get a key at pexels.com/api).",
+        },
+        { status: 503 }
+      );
+    }
+
     let initialFrames: string[];
     let source: string;
 

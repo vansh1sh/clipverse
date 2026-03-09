@@ -18,6 +18,18 @@ export async function POST(request: NextRequest) {
     }
 
     const pexelsKey = process.env.PEXELS_API_KEY;
+    const isVercel = process.env.VERCEL === "1";
+
+    if (isVercel && !pexelsKey) {
+      return NextResponse.json(
+        {
+          error:
+            "Regenerate frame on this host requires PEXELS_API_KEY. Add it in Vercel → Settings → Environment Variables.",
+        },
+        { status: 503 }
+      );
+    }
+
     const imageDataUrl = pexelsKey
       ? await fetchOnePexelsImageAsDataUrl(searchQuery, pexelsKey)
       : await fetchOneGoogleImageAsDataUrl(searchQuery);
