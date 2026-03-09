@@ -18,13 +18,13 @@ ClipVerse is a small web app that turns a short text prompt into a cinematic cli
 
 ### Live site
 
-Once deployed (for example on Vercel), you get:
-
-- A simple homepage where you enter a prompt.
-- An editor view with:
-  - Main preview player.
-  - Right‑hand panel for replacing/regenerating frames and uploading images.
-  - Timeline of frames with optional intro/mid motion clips.
+- Deployed at: [`clipverse-six.vercel.app`](http://clipverse-six.vercel.app/)
+- You get:
+  - A simple homepage where you enter a prompt.
+  - An editor view with:
+    - Main preview player.
+    - Right‑hand panel for replacing/regenerating frames and uploading images.
+    - Timeline of frames with optional intro/mid motion clips.
 
 ### Local setup
 
