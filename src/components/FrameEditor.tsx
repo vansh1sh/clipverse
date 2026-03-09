@@ -661,8 +661,16 @@ export default function FrameEditor({
             updateCurrentSourceFrames((prev) =>
               prev.map((f, i) => {
                 const offset = i - startIndex;
-                if (offset >= 0 && offset < fill.length)
-                  return { ...f, replaced: true, replacementDataUrl: fill[offset] };
+                if (offset >= 0 && offset < fill.length) {
+                  const newUrl = fill[offset];
+                  return {
+                    ...f,
+                    imageDataUrl: newUrl,
+                    replacementDataUrl: newUrl,
+                    replaced: true,
+                    fromVideo: false,
+                  };
+                }
                 return f;
               })
             );
@@ -840,8 +848,16 @@ export default function FrameEditor({
               updateCurrentSourceFrames((prev) =>
                 prev.map((f, i) => {
                   const offset = i - (idx + 1);
-                  if (offset >= 0 && offset < fill.length)
-                    return { ...f, replaced: true, replacementDataUrl: fill[offset] };
+                  if (offset >= 0 && offset < fill.length) {
+                    const newUrl = fill[offset];
+                    return {
+                      ...f,
+                      imageDataUrl: newUrl,
+                      replacementDataUrl: newUrl,
+                      replaced: true,
+                      fromVideo: false,
+                    };
+                  }
                   return f;
                 })
               );
@@ -908,8 +924,8 @@ export default function FrameEditor({
         setRegenSuccess(true);
         setTimeout(() => setRegenSuccess(false), 2500);
 
-        const shouldPropagateRight =
-          (propagateNextFrames || activeSource !== "main") && indexToReplace < frameCount - 1;
+        // When using frame prompt, always change all clips to the right (alternate ending)
+        const shouldPropagateRight = indexToReplace < frameCount - 1;
         if (shouldPropagateRight) {
           const numNext = frameCount - 1 - indexToReplace;
           setPropagating(true);
@@ -935,12 +951,16 @@ export default function FrameEditor({
               updateCurrentSourceFrames((prev) =>
                 prev.map((f, i) => {
                   const offset = i - startIndex;
-                  if (offset >= 0 && offset < fill.length)
+                  if (offset >= 0 && offset < fill.length) {
+                    const newUrl = fill[offset];
                     return {
                       ...f,
+                      imageDataUrl: newUrl,
+                      replacementDataUrl: newUrl,
                       replaced: true,
-                      replacementDataUrl: fill[offset],
+                      fromVideo: false,
                     };
+                  }
                   return f;
                 })
               );

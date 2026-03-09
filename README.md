@@ -1,54 +1,26 @@
-# ClipVerse — prompt to video
+# ClipVerse
 
-ClipVerse is a small web app that turns a short text prompt into a cinematic clip you can tweak frame‑by‑frame.
+**Prompt → cinematic clip. Change one frame, get a new ending.**
 
-### What you can do
+Turn a text prompt into a short video made of 2–3 video clips and ~10 images. Edit any frame (upload, search, or regenerate with a new prompt); all frames to the right update so you get **alternate endings** in one timeline. Branch into multiverses and compare versions side by side.
 
-- **Turn a prompt into a clip**: Type a description and get a sequence of images as a video.
-- **Edit frames visually**:
-  - Replace any frame with an uploaded image.
-  - Regenerate frames from a new prompt.
-  - Reorder frames with drag and drop.
-- **Control the timing**:
-  - Scrub and play/pause on the main preview.
-  - Adjust where the clip starts and ends with a trim range.
-- **Add motion and music**:
-  - Optional intro/mid motion clips between frames.
-  - Background music picked automatically from bundled tracks.
+### Features
 
-### Live site
+- **Mixed timeline** — Video clips (Pixabay) + images (Google) from one prompt
+- **Alternate endings** — Replace a frame with a new prompt; every frame to the right refreshes with new content
+- **Multiverse branches** — Fork the timeline, edit in place, switch between Main and branches
+- **Motion on images** — Ken Burns (pan/zoom) on image frames; smooth crossfade between frames
+- **Export** — Download the final sequence as video (MP4 when Python/ffmpeg available)
 
-- Deployed at: [`clipverse-six.vercel.app`](http://clipverse-six.vercel.app/)
-- You get:
-  - A simple homepage where you enter a prompt.
-  - An editor view with:
-    - Main preview player.
-    - Right‑hand panel for replacing/regenerating frames and uploading images.
-    - Timeline of frames with optional intro/mid motion clips.
+### Live
 
-### Local setup
+[clipverse-six.vercel.app](https://clipverse-six.vercel.app)
 
-1. **Install dependencies**
+### Run locally
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+npm run dev
+```
 
-2. **(Optional) Enable full export**
-
-   If you want to export final MP4s locally:
-
-   - Install Python 3.
-   - Install the video dependencies:
-
-     ```bash
-     pip install -r scripts/requirements.txt
-     ```
-
-3. **Run the dev server**
-
-   ```bash
-   npm run dev
-   ```
-
-   Then open `http://localhost:3000` in your browser.
+Open `http://localhost:3000`. Optional: set `PIXABAY_API_KEY` for video clips; add `scripts/requirements.txt` + Python for export.

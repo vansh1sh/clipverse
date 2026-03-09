@@ -15,18 +15,26 @@ export async function POST(request: NextRequest) {
       MAX_PROPAGATE,
       Math.max(1, parseInt(String(numFrames), 10) || 5)
     );
-    const searchQuery = (prompt || "continued scene").trim().slice(0, 500);
+    const baseQuery = (prompt || "continued scene").trim().slice(0, 450);
 
-    // Prefer video so we get more video clips and fewer static images
-    const pixabayClips = await searchPixabayVideos(searchQuery, 5);
-    if (pixabayClips.length > 0) {
-      return NextResponse.json({
-        videoUrl: pixabayClips[0].url,
-        frameDataUrls: [],
-        demo: false,
-      });
+    // When we need many frames (alternate ending), use only images so each frame is different.
+    // One video would give many similar frames; images give one distinct image per frame.
+    const useOnlyImages = count > 2;
+    if (!useOnlyImages) {
+      const pixabayClips = await searchPixabayVideos(baseQuery, 5);
+      if (pixabayClips.length > 0) {
+        return NextResponse.json({
+          videoUrl: pixabayClips[0].url,
+          frameDataUrls: [],
+          demo: false,
+        });
+      }
     }
 
+    // Add variation so results differ from original timeline (alternate ending, different take)
+    const searchQuery = baseQuery
+      ? `${baseQuery} alternate ending different scene cinematic`
+      : "cinematic scene variation";
     const frameDataUrls = await fetchGoogleImagesAsDataUrls(searchQuery, count);
 
     return NextResponse.json({
