@@ -54,23 +54,32 @@ Return ONLY a valid JSON array of strings, like:
       return null;
     }
 
-    const data = await res.json();
+    type OpenRouterChatResponse = {
+      choices?: Array<{
+        message?: {
+          content?: string | Array<{ type?: string; text?: string }>;
+        };
+      }>;
+    };
+
+    const data = (await res.json()) as OpenRouterChatResponse;
     const msg = data?.choices?.[0]?.message;
 
-    let rawContent: unknown = msg?.content;
+    const rawContent: unknown = msg?.content;
     let contentText: string | null = null;
 
     if (typeof rawContent === "string") {
       contentText = rawContent;
     } else if (Array.isArray(rawContent)) {
       // OpenRouter may return an array of content parts
-      const textParts = rawContent
+      type ContentPart = { type?: string; text?: string };
+      const textParts = (rawContent as ContentPart[])
         .filter(
-          (part: any) =>
+          (part: ContentPart) =>
             part &&
             (part.type === "text" || typeof part.text === "string")
         )
-        .map((part: any) => part.text ?? "")
+        .map((part: ContentPart) => part.text ?? "")
         .filter((t: string) => t && t.trim().length > 0);
       contentText = textParts.join("\n");
     }
@@ -97,7 +106,10 @@ Return ONLY a valid JSON array of strings, like:
     }
 
     if (!sentences || sentences.length === 0) {
-      console.error("LLM transcript: no usable sentences from content:", content);
+      console.error(
+        "LLM transcript: no usable sentences from content:",
+        contentText
+      );
       return null;
     }
 
