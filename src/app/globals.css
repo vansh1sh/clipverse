@@ -3,6 +3,16 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Brand – warm amber/coral for home screen */
+  --brand-50: #fffbeb;
+  --brand-100: #fef3c7;
+  --brand-200: #fde68a;
+  --brand-400: #fbbf24;
+  --brand-500: #f59e0b;
+  --brand-600: #d97706;
+  --brand-700: #b45309;
+  --brand-900: #78350f;
+  --brand-950: #451a03;
 }
 
 @theme inline {
@@ -10,6 +20,85 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+}
+
+@keyframes frame-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-frame-fade-in {
+  animation: frame-fade-in 0.25s ease-out forwards;
+}
+
+/* Timeline – black & white */
+.timeline-track {
+  --track-height: 76px;
+  --thumb-width: 64px;
+  --playhead-width: 3px;
+  --playhead-grip: 12px;
+}
+.timeline-track .timeline-fill {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.3), #000);
+  transition: width 0.05s ease-out;
+}
+.timeline-playhead {
+  width: var(--playhead-width);
+  border-radius: 2px;
+  background: #000;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3);
+  transition: left 0.05s ease-out;
+}
+.timeline-playhead::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--playhead-grip);
+  height: var(--playhead-grip);
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #000;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+.timeline-scrubber-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: #000;
+  pointer-events: none;
+}
+.timeline-frame {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.15s ease;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+.timeline-frame:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.15);
+}
+.timeline-frame.selected {
+  box-shadow: 0 0 0 3px #000, 0 0 0 6px rgb(0 0 0 / 0.15);
+}
+.timeline-frame.drop-target {
+  box-shadow: 0 0 0 3px #333, 0 0 0 6px rgb(0 0 0 / 0.2);
 }
 
 @media (prefers-color-scheme: dark) {
