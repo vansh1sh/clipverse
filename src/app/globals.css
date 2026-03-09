@@ -41,7 +41,45 @@
 }
 
 .animate-frame-fade-in {
-  animation: frame-fade-in 0.25s ease-out forwards;
+  animation: frame-fade-in 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* Ken Burns: slow pan + zoom so static images feel like video (2s per frame) */
+@keyframes ken-burns-pan-zoom {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.08) translate(-2%, -1.5%);
+  }
+}
+
+@keyframes ken-burns-pan-zoom-alt {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.06) translate(2%, 1%);
+  }
+}
+
+@keyframes ken-burns-zoom-in {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+
+.animate-ken-burns {
+  animation: ken-burns-pan-zoom 2s ease-in-out forwards;
+}
+.animate-ken-burns-alt {
+  animation: ken-burns-pan-zoom-alt 2s ease-in-out forwards;
+}
+.animate-ken-burns-zoom {
+  animation: ken-burns-zoom-in 2s ease-in-out forwards;
 }
 
 /* Timeline – black & white */

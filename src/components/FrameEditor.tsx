@@ -12,9 +12,12 @@ import {
   Trash2,
 } from "lucide-react";
 import type { FrameData } from "@/types/editor";
+import type { GenerateSegment } from "@/components/CreateClip";
 
 const FRAME_INTERVAL = 2; // seconds per frame during editor playback
-const FRAME_TRANSITION_MS = 250;
+/** Frames sampled per video segment in mixed timeline (~4 sec per clip at 2s/frame). */
+const FRAMES_PER_VIDEO_SEGMENT = 2;
+const FRAME_TRANSITION_MS = 400;
 const TIMELINE_THUMB_GAP = 8; // gap-2 in Tailwind
 const THUMB_SIZES = [40, 56, 72] as const;
 const DEFAULT_THUMB_INDEX = 1; // 56px
@@ -30,6 +33,8 @@ interface FrameEditorProps {
   onBack: () => void;
   /** When provided, use these as initial frames (no video); videoUrl can be empty. */
   initialFrames?: string[];
+  /** Mixed timeline: 2–3 video clips + images. Expanded to frames on load. */
+  initialSegments?: GenerateSegment[];
 }
 
 export default function FrameEditor({
@@ -38,6 +43,7 @@ export default function FrameEditor({
   prompt,
   onBack,
   initialFrames,
+  initialSegments,
 }: FrameEditorProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,7 +90,9 @@ export default function FrameEditor({
   const [animatedClips, setAnimatedClips] = useState<{ name: string; url: string }[]>([]);
   const [pixabayClips, setPixabayClips] = useState<{ url: string; tags: string }[]>([]);
 
-  const isImageSequence = !!(initialFrames && initialFrames.length > 0);
+  const isImageSequence =
+    !!(initialFrames && initialFrames.length > 0) ||
+    !!(initialSegments && initialSegments.length > 0);
   const hasPreviewVideo = !!previewVideoUrl;
 
   // Use proxy for external videos so frame extraction works (no CORS taint)
@@ -580,6 +588,7 @@ export default function FrameEditor({
         id: generateId(),
         timestamp: i * FRAME_INTERVAL,
         imageDataUrl: f.replacementDataUrl ?? f.imageDataUrl,
+        fromVideo: f.fromVideo,
       }));
       return [...prev, { id: generateId(), name, frames: copy, editFromIndex }];
     });
@@ -596,6 +605,7 @@ export default function FrameEditor({
           id: generateId(),
           timestamp: i * FRAME_INTERVAL,
           imageDataUrl: f.replacementDataUrl ?? f.imageDataUrl,
+          fromVideo: f.fromVideo,
         }));
         return [...prev, { id: newId, name, frames: copy, editFromIndex }];
       });
@@ -604,7 +614,7 @@ export default function FrameEditor({
     [frames]
   );
 
-  const addMultiverse = () => copyFramesToMultiverse(frames);
+  const addMultiverse = () => copyFramesToMultiverse(displayFrames);
 
   const removeMultiverse = (id: string) => {
     setMultiverses((prev) => prev.filter((mv) => mv.id !== id));
@@ -628,7 +638,9 @@ export default function FrameEditor({
       const currentFrames = displayFrames;
       if (saveAsMultiverseBeforeChange) copyFramesToMultiverse(currentFrames, idx);
       replaceFrame(idx, dataUrl);
-      if (propagateNextFrames && idx < currentFrames.length - 1) {
+      const shouldPropagateRight =
+        (propagateNextFrames || activeSource !== "main") && idx < currentFrames.length - 1;
+      if (shouldPropagateRight) {
         setPropagating(true);
         try {
           const numNext = currentFrames.length - 1 - idx;
@@ -697,6 +709,11 @@ export default function FrameEditor({
   const videoUrlToFrameDataUrls = useCallback(
     (url: string, numFrames: number): Promise<string[]> =>
       new Promise((resolve, reject) => {
+        // Use proxy for external URLs so frame extraction works (no CORS taint on canvas)
+        const effectiveUrl =
+          url.startsWith("http://") || url.startsWith("https://")
+            ? `/api/proxy-video?url=${encodeURIComponent(url)}`
+            : url;
         const video = document.createElement("video");
         video.crossOrigin = "anonymous";
         video.muted = true;
@@ -732,10 +749,56 @@ export default function FrameEditor({
           capture();
         };
         video.onerror = () => reject(new Error("Video failed to load"));
-        video.src = url;
+        video.src = effectiveUrl;
       }),
     []
   );
+
+  // Expand mixed timeline (2–3 video clips + images) into frames
+  useEffect(() => {
+    if (!initialSegments?.length) return;
+    let cancelled = false;
+    const run = async () => {
+      const allFrames: FrameData[] = [];
+      for (const seg of initialSegments) {
+        if (cancelled) return;
+        if (seg.type === "video") {
+          try {
+            const dataUrls = await videoUrlToFrameDataUrls(
+              seg.url,
+              FRAMES_PER_VIDEO_SEGMENT
+            );
+            dataUrls.forEach((imageDataUrl, i) => {
+              allFrames.push({
+                id: generateId(),
+                timestamp: (allFrames.length + i) * FRAME_INTERVAL,
+                imageDataUrl,
+                fromVideo: true,
+              });
+            });
+          } catch {
+            // If one video fails, skip it and continue
+          }
+        } else {
+          allFrames.push({
+            id: generateId(),
+            timestamp: allFrames.length * FRAME_INTERVAL,
+            imageDataUrl: seg.dataUrl,
+            fromVideo: false,
+          });
+        }
+      }
+      if (!cancelled) {
+        setFrames(allFrames);
+        setVideoDuration(allFrames.length * FRAME_INTERVAL);
+        setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialSegments, videoUrlToFrameDataUrls]);
 
   const useSearchResultAsFrame = useCallback(
     async (imageUrl: string) => {
@@ -755,7 +818,9 @@ export default function FrameEditor({
         const currentFrames = displayFrames;
         if (saveAsMultiverseBeforeChange) copyFramesToMultiverse(currentFrames, idx);
         replaceFrame(idx, dataUrl);
-        if (propagateNextFrames && idx < currentFrames.length - 1) {
+        const shouldPropagateRight =
+          (propagateNextFrames || activeSource !== "main") && idx < currentFrames.length - 1;
+        if (shouldPropagateRight) {
           setPropagating(true);
           try {
             const numNext = currentFrames.length - 1 - idx;
@@ -791,7 +856,7 @@ export default function FrameEditor({
         setSearchError("Could not load image");
       }
     },
-    [selectedIndex, propagateNextFrames, displayFrames, prompt, searchKeyword, replaceFrame, videoUrlToFrameDataUrls, saveAsMultiverseBeforeChange, copyFramesToMultiverse, updateCurrentSourceFrames]
+    [selectedIndex, propagateNextFrames, activeSource, displayFrames, prompt, searchKeyword, replaceFrame, videoUrlToFrameDataUrls, saveAsMultiverseBeforeChange, copyFramesToMultiverse, updateCurrentSourceFrames]
   );
 
   const handleReplaceWithPrompt = async () => {
@@ -843,7 +908,9 @@ export default function FrameEditor({
         setRegenSuccess(true);
         setTimeout(() => setRegenSuccess(false), 2500);
 
-        if (propagateNextFrames && indexToReplace < frameCount - 1) {
+        const shouldPropagateRight =
+          (propagateNextFrames || activeSource !== "main") && indexToReplace < frameCount - 1;
+        if (shouldPropagateRight) {
           const numNext = frameCount - 1 - indexToReplace;
           setPropagating(true);
           try {
@@ -1053,31 +1120,45 @@ export default function FrameEditor({
             )}
             {displayFrames.length > 0 && (
               <div
-                className={`absolute inset-0 z-0 ${
+                className={`absolute inset-0 z-0 overflow-hidden ${
                   activeSource === "main" && (hasPreviewVideo || (pixabayClips.length > 0 && currentTime < 5))
                     ? "opacity-0 pointer-events-none"
                     : "opacity-100"
                 }`}
               >
-                <img
-                  src={
-                    (displayFrames[displayFrameIndex] as FrameData)
-                      ?.replacementDataUrl ||
-                    (displayFrames[displayFrameIndex] as FrameData)?.imageDataUrl
-                  }
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-contain"
-                />
-                <img
-                  key={currentFrameIndex}
-                  src={
-                    (displayFrames[currentFrameIndex] as FrameData)
-                      ?.replacementDataUrl ||
-                    (displayFrames[currentFrameIndex] as FrameData)?.imageDataUrl
-                  }
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-contain animate-frame-fade-in"
-                />
+                {/* Previous frame (fading out) – static or end state */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <img
+                    src={
+                      (displayFrames[displayFrameIndex] as FrameData)
+                        ?.replacementDataUrl ||
+                      (displayFrames[displayFrameIndex] as FrameData)?.imageDataUrl
+                    }
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
+                {/* Current frame – crossfade; Ken Burns (pan/zoom) only for image frames, not video clips */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <img
+                    key={currentFrameIndex}
+                    src={
+                      (displayFrames[currentFrameIndex] as FrameData)
+                        ?.replacementDataUrl ||
+                      (displayFrames[currentFrameIndex] as FrameData)?.imageDataUrl
+                    }
+                    alt=""
+                    className={`absolute inset-0 w-full h-full object-cover animate-frame-fade-in ${
+                      (displayFrames[currentFrameIndex] as FrameData)?.fromVideo
+                        ? ""
+                        : currentFrameIndex % 3 === 0
+                          ? "animate-ken-burns"
+                          : currentFrameIndex % 3 === 1
+                            ? "animate-ken-burns-alt"
+                            : "animate-ken-burns-zoom"
+                    }`}
+                  />
+                </div>
               </div>
             )}
             {displayFrames.length === 0 && initialFrames && initialFrames.length > 0 && (

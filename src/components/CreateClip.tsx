@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
+export type GenerateSegment =
+  | { type: "video"; url: string }
+  | { type: "image"; dataUrl: string };
+
 interface CreateClipProps {
   onGenerated: (data: {
     videoUrl: string;
     duration: number;
     prompt: string;
     initialFrames?: string[];
+    segments?: GenerateSegment[];
   }) => void;
 }
 
@@ -35,6 +40,7 @@ export default function CreateClip({ onGenerated }: CreateClipProps) {
         duration: data.duration ?? 30,
         prompt: data.prompt || prompt,
         initialFrames: data.initialFrames,
+        segments: data.segments,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");

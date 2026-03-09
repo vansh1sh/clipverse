@@ -5,6 +5,8 @@ export interface FrameData {
   replaced?: boolean; // user replaced this frame
   replacementDataUrl?: string;
   prompt?: string; // prompt used for this segment (if regenerated)
+  /** When true, this frame came from a video clip – skip Ken Burns (pan/zoom) so video stays still. */
+  fromVideo?: boolean;
 }
 
 export interface VideoProject {

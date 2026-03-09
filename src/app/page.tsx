@@ -10,6 +10,7 @@ export default function Home() {
     duration: number;
     prompt: string;
     initialFrames?: string[];
+    segments?: import("@/components/CreateClip").GenerateSegment[];
   } | null>(null);
 
   return (
@@ -22,6 +23,7 @@ export default function Home() {
             prompt={generated.prompt}
             onBack={() => setGenerated(null)}
             initialFrames={generated.initialFrames}
+            initialSegments={generated.segments}
           />
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[80vh]">

@@ -4,6 +4,13 @@ import { NextRequest, NextResponse } from "next/server";
 const ALLOWED_ORIGINS = [
   "https://commondatastorage.googleapis.com",
   "http://commondatastorage.googleapis.com",
+  // Pixabay video CDN and Vimeo (Pixabay often hosts videos on Vimeo)
+  "https://cdn.pixabay.com",
+  "http://cdn.pixabay.com",
+  "https://i.vimeocdn.com",
+  "http://i.vimeocdn.com",
+  "https://player.vimeo.com",
+  "http://player.vimeo.com",
 ];
 
 export async function GET(request: NextRequest) {
@@ -18,7 +25,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid url" }, { status: 400 });
   }
   const origin = `${parsed.protocol}//${parsed.host}`;
-  if (!ALLOWED_ORIGINS.includes(origin)) {
+  const allowed =
+    ALLOWED_ORIGINS.includes(origin) ||
+    parsed.host.endsWith(".pixabay.com") ||
+    parsed.host.endsWith(".vimeocdn.com") ||
+    parsed.host.endsWith(".vimeo.com");
+  if (!allowed) {
     return NextResponse.json({ error: "Origin not allowed" }, { status: 403 });
   }
   const res = await fetch(url, {
